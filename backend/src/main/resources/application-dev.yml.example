@@ -1,0 +1,10 @@
+# 使用说明：
+#   1. 复制本文件为 application-dev.yml
+#   2. 填入你自己的数据库账号密码
+#   3. application-dev.yml 已被 .gitignore 排除，不会被提交
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cube_timer?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: your-username
+    password: your-password

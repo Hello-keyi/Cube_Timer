@@ -1,0 +1,15 @@
+# ===== 本地环境配置（含密码，禁止提交）=====
+application-dev.yml
+application-local.yml
+
+# ===== Java / Maven =====
+target/
+*.class
+
+# ===== IDEA =====
+.idea/
+*.iml
+
+# ===== 前端 =====
+node_modules/
+dist/

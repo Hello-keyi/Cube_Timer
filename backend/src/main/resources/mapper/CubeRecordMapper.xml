@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.backend.mapper.CubeRecordMapper">
+
+    <select id="list" resultType="com.example.backend.entity.CubeRecord">
+        select * from cube_record order by id desc
+    </select>
+
+    <insert id="insert">
+        insert into cube_record (time_ms) values (#{timeMs})
+    </insert>
+
+    <select id="count" resultType="long">
+        select count(*) from cube_record
+    </select>
+
+    <select id="page" resultType="com.example.backend.entity.CubeRecord">
+        select * from cube_record order by id desc limit #{offset}, #{size}
+    </select>
+
+    <select id="search" resultType="com.example.backend.entity.CubeRecord">
+        select * from cube_record
+        <where>
+            <if test="minMs != null">
+                and time_ms &gt;= #{minMs}
+            </if>
+            <if test="maxMs != null">
+                and time_ms &lt;= #{maxMs}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <update id="update">
+        update cube_record set time_ms = #{timeMs} where id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from cube_record where id = #{id}
+    </delete>
+
+</mapper>

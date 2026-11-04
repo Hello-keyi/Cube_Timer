@@ -1,0 +1,165 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    min-height: 100vh;
+    background: #1e1e1e;
+    color: #eee;
+    font-family: Consolas, Menlo, monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 70px;
+    user-select: none;
+}
+
+/* ===== 顶部标签页（vue-router 的 RouterLink） ===== */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 45px;
+}
+
+.tab {
+    padding: 9px 26px;
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: #888;
+    background: #262626;
+    border: 1px solid #333;
+    border-radius: 9px;
+    text-decoration: none;
+    transition: color .15s, background .15s, border-color .15s;
+}
+.tab:hover { color: #ccc; background: #2d2d2d; }
+.tab.router-link-active {
+    color: #fff;
+    background: #333;
+    border-color: #555;
+}
+
+/* ===== 页面内容 ===== */
+.content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.timer-view,
+.history-view {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ===== 计时器 ===== */
+.timer {
+    font-size: 150px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats {
+    margin-top: 44px;
+    display: flex;
+    gap: 70px;
+}
+.stat { text-align: center; }
+.stat-label { font-size: 18px; color: #888; letter-spacing: 2px; }
+.stat-value {
+    margin-top: 8px;
+    font-size: 26px;
+    color: #ccc;
+    font-variant-numeric: tabular-nums;
+}
+
+.btn {
+    margin-top: 40px;
+    width: 200px;
+    padding: 14px 0;
+    font-family: inherit;
+    font-size: 18px;
+    letter-spacing: 6px;
+    color: #ddd;
+    background: #2c2c2c;
+    border: 1px solid #3d3d3d;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.btn:hover { background: #179817; }
+.btn.running {
+    color: #fff;
+    background: #8f2b2b;
+    border-color: #b23a3a;
+}
+.delete-btn {
+    margin-left: 10px;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: #fff;
+    background: #8f2b2b;
+    border: 1px solid #b23a3a;
+    border-radius: 4px;
+    cursor: pointer;
+}
+/* ===== 小标题 ===== */
+.section-title {
+    margin: 46px 0 14px;
+    font-size: 14px;
+    font-weight: normal;
+    color: #777;
+    letter-spacing: 2px;
+}
+.section-title .section-count {
+    margin-left: 10px;
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 1px;
+}
+
+/* ===== 成绩列表（两个页面共用） ===== */
+.record-list {
+    width: 340px;
+    max-width: 90vw;
+    max-height: 260px;
+    overflow-y: auto;
+    border-top: 1px solid #2a2a2a;
+    border-bottom: 1px solid #2a2a2a;
+}
+.record-list-wide { width: 420px; }
+
+.record-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 6px;
+    font-size: 14px;
+    color: #9a9a9a;
+    border-bottom: 1px solid #2a2a2a;
+    font-variant-numeric: tabular-nums;
+}
+.record-item:last-child { border-bottom: none; }
+.record-item:first-child .record-time { color: #fff; }
+.record-time { font-size: 15px; }
+.record-date { font-size: 12px; color: #666; }
+
+.record-empty {
+    padding: 24px 6px;
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+}
+
+/* ===== 底部提示 ===== */
+.msg {
+    position: fixed;
+    bottom: 24px;
+    font-size: 13px;
+    color: #666;
+}
+.msg-error { color: #c05050; }
