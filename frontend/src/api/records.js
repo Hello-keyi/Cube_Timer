@@ -54,3 +54,12 @@ export async function deleteRecord(id) {
   if (json.code !== 0) throw new Error(json.msg || '删除失败')
   return json.data
 }
+/**
+ * 读取聚合统计（后端 D12）：total / bestText / worstText / avg5Text / avg12Text / todayBestText
+ */
+export async function fetchStats() {
+  const res = await fetch(BASE_URL + '/record/stats')
+  const json = await res.json()
+  if (json.code !== 0) throw new Error(json.msg || '读取统计失败')
+  return json.data
+}
