@@ -63,3 +63,21 @@ export async function fetchStats() {
   if (json.code !== 0) throw new Error(json.msg || '读取统计失败')
   return json.data
 }
+
+/**
+ * F7：读取单条成绩详情（含打乱列表）
+ * TODO(F7-5)：参照 fetchRecords 的套路实现
+ *   GET /record/{id} → 判 json.code !== 0 → throw new Error(json.msg || '读取详情失败') → return json.data
+ */
+export async function fetchRecordDetail(id) {
+  throw new Error('TODO：请实现 fetchRecordDetail(id)（GET /record/' + id + '）')
+}
+
+/**
+ * F7：给某条成绩添加一条打乱
+ * TODO(F7-6)：POST /record/{id}/scramble?scramble=...（query 参数，记得 encodeURIComponent）
+ *   成功无 data；失败 throw new Error(json.msg || '添加打乱失败')
+ */
+export async function addScramble(id, scramble) {
+  throw new Error('TODO：请实现 addScramble(id, scramble)（POST /record/' + id + '/scramble）')
+}

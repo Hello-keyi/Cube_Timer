@@ -20,5 +20,10 @@ const emit = defineEmits(['delete'])
       <button v-if="showDelete" class="delete-btn" @click="emit('delete', item.id)">删除</button>
     </div>
     <p v-if="records.length === 0" class="record-empty">{{ emptyText }}</p>
+    <!-- TODO(F7-7)：可选——让历史页列表项能点进详情：
+         1) 加 prop linkable（Boolean, 默认 false）
+         2) 历史页传 :linkable="true"
+         3) 时间用 <RouterLink :to="'/record/' + item.id"> 包起来（记得 import { RouterLink } from 'vue-router'） -->
+
   </div>
 </template>
