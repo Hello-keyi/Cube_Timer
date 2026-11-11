@@ -65,9 +65,7 @@ export async function fetchStats() {
 }
 
 /**
- * F7：读取单条成绩详情（含打乱列表）
- * TODO(F7-5)：参照 fetchRecords 的套路实现
- *   GET /record/{id} → 判 json.code !== 0 → throw new Error(json.msg || '读取详情失败') → return json.data
+ * 读取单条成绩详情（含打乱列表）
  */
 export async function fetchRecordDetail(id) {
   const res = await fetch(BASE_URL + '/record/' + id)
@@ -77,9 +75,7 @@ export async function fetchRecordDetail(id) {
 }
 
 /**
- * F7：给某条成绩添加一条打乱
- * TODO(F7-6)：POST /record/{id}/scramble?scramble=...（query 参数，记得 encodeURIComponent）
- *   成功无 data；失败 throw new Error(json.msg || '添加打乱失败')
+ * 给某条成绩添加一条打乱公式
  */
 export async function addScramble(id, scramble) {
   const res = await fetch(BASE_URL + '/record/' + id + '/scramble?scramble=' + encodeURIComponent(scramble), {

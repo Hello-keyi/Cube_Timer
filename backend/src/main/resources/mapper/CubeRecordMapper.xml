@@ -40,4 +40,25 @@
         delete from cube_record where id = #{id}
     </delete>
 
+    <select id="getById" resultType="com.example.backend.entity.CubeRecord">
+        select * from cube_record where id = #{id}
+    </select>
+
+
+    <select id="minTime" resultType="java.lang.Integer">
+        select min(time_ms) from cube_record
+    </select>
+
+    <select id="maxTime" resultType="java.lang.Integer">
+        select max(time_ms) from cube_record
+    </select>
+
+    <select id="recentTimes" resultType="java.lang.Integer">
+        select time_ms from cube_record order by id desc limit #{n}
+    </select>
+
+    <select id="todayBest" resultType="java.lang.Integer">
+        select min(time_ms) from cube_record where created_at &gt;= #{begin} and created_at &lt;= #{end}
+    </select>
+
 </mapper>

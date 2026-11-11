@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.backend.mapper.CubeScrambleMapper">
+
+    <select id="listByRecordId" resultType="com.example.backend.entity.CubeScramble">
+        select * from cube_scramble where record_id = #{recordId} order by seq asc
+    </select>
+
+    <insert id="insert">
+        insert into cube_scramble (record_id, scramble, seq)
+        values (#{recordId}, #{scramble}, #{seq})
+    </insert>
+
+</mapper>

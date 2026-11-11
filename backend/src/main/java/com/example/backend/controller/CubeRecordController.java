@@ -6,10 +6,11 @@ import com.example.backend.common.Result;
 import com.example.backend.dto.CubeRecordAddDTO;
 import com.example.backend.dto.CubeRecordUpdateDTO;
 import com.example.backend.service.CubeRecordService;
+import com.example.backend.vo.CubeRecordDetailVO;
 import com.example.backend.vo.CubeRecordVO;
+import com.example.backend.vo.RecordStatsVO;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,5 +57,22 @@ public class CubeRecordController {
     public Result<Void> delete(@PathVariable Integer id) {
         cubeRecordService.delete(id);
         return Result.success();
+    }
+
+    @GetMapping("/{id}")
+    public Result<CubeRecordDetailVO> detail(@PathVariable Integer id) {
+        return Result.success(cubeRecordService.getDetail(id));
+    }
+
+    @PostMapping("/{id}/scramble")
+    public Result<Void> addScramble(@PathVariable Integer id,
+                                    @RequestParam String scramble) {
+        cubeRecordService.addScramble(id, scramble);
+        return Result.success();
+    }
+
+    @GetMapping("/stats")
+    public Result<RecordStatsVO> stats() {
+        return Result.success(cubeRecordService.getStats());
     }
 }

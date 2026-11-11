@@ -1,11 +1,5 @@
 <script setup>
-// =========================================================
-// F7 成绩详情页 —— 骨架（你来补全所有 TODO）
-// 知识点：动态路由 /record/:id、useRoute/useRouter、路由参数、新接口调用
-// 契约：
-//   GET  /record/{id}                 → { id, timeMs, timeText, createdText, scrambles: [] }
-//   POST /record/{id}/scramble?scramble=xxx → 成功无返回数据
-// =========================================================
+// 成绩详情页：展示单条成绩 + 打乱公式，支持新增打乱
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchRecordDetail, addScramble } from '@/api/records'
@@ -29,8 +23,6 @@ async function loadDetail() {
   errorMsg.value = ''
   try {
     detail.value = await fetchRecordDetail(recordId.value)
-    // TODO(F7-1)：调用 fetchRecordDetail(recordId.value)，把结果赋给 detail
-    // 提示：和 HistoryView.loadPage 的写法一样（try/catch/finally）
   } catch (e) {
     errorMsg.value = '加载失败：' + e.message
   } finally {
@@ -40,7 +32,6 @@ async function loadDetail() {
 
 // ===== 添加一条打乱 =====
 async function submitScramble() {
-  // TODO(F7-2)：
   if (!newScramble.value.trim()) {
     errorMsg.value = '打乱公式不能为空'
     return
@@ -58,18 +49,11 @@ async function submitScramble() {
   } finally {
     submitting.value = false
   }
-  //   1) 校验 newScramble.value 不能是空白（trim 后为空 → 提示/直接 return）
-  //   2) submitting = true
-  //   3) await addScramble(recordId.value, newScramble.value)
-  //   4) 成功后：清空输入 + 刷新数据（要么再调一次 loadDetail()，要么把新打乱 push 进 detail.value.scrambles）
-  //   5) 失败：errorMsg.value = '添加失败：' + e.message
-  //   6) 最后 submitting = false
 }
 
 // ===== 返回 =====
 function goBack() {
-  router.back()  // 或 router.push('/history')，都行
-  // TODO(F7-3)：回到历史页（提示：router.push('/history') 或 router.back()）
+  router.push('/history')
 }
 
 onMounted(loadDetail)
@@ -90,12 +74,10 @@ onMounted(loadDetail)
 
         <h3 class="detail-subtitle">打乱记录（{{ detail.scrambles.length }}）</h3>
 
-        <!-- TODO(F7-4)：为空时显示"还没有打乱记录"；不为空用 v-for 渲染 detail.scrambles -->
         <ul v-if="detail.scrambles.length" class="scramble-list">
           <li v-for="(s, i) in detail.scrambles" :key="i" class="scramble-item">{{ s }}</li>
         </ul>
         <p v-else class="detail-msg">还没有打乱记录</p>
-        <!-- 这里补空状态：<p v-else class="detail-msg">还没有打乱记录</p> -->
 
         <div class="scramble-add">
           <input

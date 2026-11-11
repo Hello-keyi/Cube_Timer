@@ -10,6 +10,4 @@ public class CubeRecordVO {
     private Integer timeMs;
     private String timeText;
     private String createdText;
-
-
 }

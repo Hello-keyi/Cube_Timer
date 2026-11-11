@@ -1,7 +1,9 @@
 package com.example.backend.service;
 
 import com.example.backend.common.PageResult;
+import com.example.backend.vo.CubeRecordDetailVO;
 import com.example.backend.vo.CubeRecordVO;
+import com.example.backend.vo.RecordStatsVO;
 
 
 import java.util.List;
@@ -19,4 +21,10 @@ public interface CubeRecordService {
     void update(Integer id, Integer timeMs);
 
     void delete(Integer id);
+
+    CubeRecordDetailVO getDetail(Integer id);
+
+    void addScramble(Integer recordId, String scramble);
+
+    RecordStatsVO getStats();
 }
