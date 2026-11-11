@@ -13,3 +13,5 @@ target/
 # ===== 前端 =====
 node_modules/
 dist/
+# ===== 发布包 / 压缩包 =====
+*.zip
