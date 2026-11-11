@@ -123,6 +123,7 @@ watch(page, () => {
       :show-date="true"
       :show-delete="true"
       :empty-text="filtered ? '没有符合条件的成绩' : '本页没有数据'"
+      :linkable="true"
       @delete="handleDelete"
     />
 

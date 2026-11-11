@@ -28,6 +28,7 @@ async function loadDetail() {
   loading.value = true
   errorMsg.value = ''
   try {
+    detail.value = await fetchRecordDetail(recordId.value)
     // TODO(F7-1)：调用 fetchRecordDetail(recordId.value)，把结果赋给 detail
     // 提示：和 HistoryView.loadPage 的写法一样（try/catch/finally）
   } catch (e) {
@@ -40,6 +41,23 @@ async function loadDetail() {
 // ===== 添加一条打乱 =====
 async function submitScramble() {
   // TODO(F7-2)：
+  if (!newScramble.value.trim()) {
+    errorMsg.value = '打乱公式不能为空'
+    return
+  }
+
+  submitting.value = true
+
+  try {
+    await addScramble(recordId.value, newScramble.value)
+    // 成功后：清空输入 + 刷新数据
+    newScramble.value = ''
+    await loadDetail()
+  } catch (e) {
+    errorMsg.value = '添加失败：' + e.message
+  } finally {
+    submitting.value = false
+  }
   //   1) 校验 newScramble.value 不能是空白（trim 后为空 → 提示/直接 return）
   //   2) submitting = true
   //   3) await addScramble(recordId.value, newScramble.value)
@@ -50,6 +68,7 @@ async function submitScramble() {
 
 // ===== 返回 =====
 function goBack() {
+  router.back()  // 或 router.push('/history')，都行
   // TODO(F7-3)：回到历史页（提示：router.push('/history') 或 router.back()）
 }
 
@@ -75,6 +94,7 @@ onMounted(loadDetail)
         <ul v-if="detail.scrambles.length" class="scramble-list">
           <li v-for="(s, i) in detail.scrambles" :key="i" class="scramble-item">{{ s }}</li>
         </ul>
+        <p v-else class="detail-msg">还没有打乱记录</p>
         <!-- 这里补空状态：<p v-else class="detail-msg">还没有打乱记录</p> -->
 
         <div class="scramble-add">
