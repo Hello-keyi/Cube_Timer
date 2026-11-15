@@ -1,3 +1,4 @@
+// TODO(F10-5)：F10 完成后，本文件所有函数改走 api/request.js（否则 401 不会自动处理）
 // 接口层：所有和后端交互的 fetch 都集中在这里
 const BASE_URL = '/api'
 
