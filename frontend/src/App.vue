@@ -21,6 +21,7 @@ function handleLogout() {
     <RouterLink class="tab" to="/history">历史</RouterLink>
 
     <template v-if="isLoggedIn">
+      <RouterLink class="tab" to="/record/new">录入</RouterLink>
       <span class="tab tab-user">{{ user?.nickname || user?.username }}</span>
       <button class="tab tab-logout" @click="handleLogout">退出登录</button>
     </template>
