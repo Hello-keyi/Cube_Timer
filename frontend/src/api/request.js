@@ -21,19 +21,34 @@ export function clearToken() {
  * @returns {Promise<any>} 后端 Result 里的 data
  */
 export async function request(url, options = {}) {
-  // TODO(F10-1)：按下面 6 步实现
-  //  1) const headers = { ...(options.headers || {}) }
-  //  2) const token = getToken(); if (token) headers.Authorization = 'Bearer ' + token
-  //  3) const res = await fetch('/api' + url, { ...options, headers })
-  //  4) if (res.status === 401) { clearToken(); 跳 '/login'（window.location.href）；再 throw 错误 }
-  //  5) const json = await res.json(); if (json.code !== 0) throw new Error(json.msg || '请求失败')
-  //  6) return json.data
-  throw new Error('TODO(F10-1)：请实现 request()')
+  //前端拿到请求之后分离出请求头，如果token存在，就在请求头中加上Authorization字段，值为Bearer + token，然后发起请求，如果返回状态码是401，说明token过期或者无效，就清除token并跳转到登录页，并抛出错误；如果返回的json的code不为0，说明请求失败，就抛出错误；最后返回json.data
+  const headers = { ...(options.headers || {}) }
+  const token = getToken()
+  if (token) {
+    headers.Authorization = 'Bearer ' + token
+  }
+
+  const res = await fetch('/api' + url, { ...options, headers })
+
+  if (res.status === 401) {
+    clearToken()
+    window.location.href = '/login'
+    throw new Error('Unauthorized: Token expired or invalid')
+  }
+
+  const json = await res.json()
+  if (json.code !== 0) {
+    throw new Error(json.msg || '请求失败')
+  }
+
+  return json.data
 }
 
 /** 业务方调用：带 JSON body 的 POST（可选，帮你少写样板） */
 export function postJSON(url, data) {
-  // TODO(F10-2)：可选实现
-  // return request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-  throw new Error('TODO(F10-2)：请实现 postJSON()')
+  return request(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
 }

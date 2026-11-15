@@ -3,10 +3,11 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { login } from '@/api/user'
-import { setToken } from '@/api/request'
+import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 const route = useRoute()
+const { saveLogin } = useAuth()
 
 const username = ref('')
 const password = ref('')
@@ -14,16 +15,29 @@ const loading = ref(false)
 const errorMsg = ref('')
 
 async function submit() {
-  // TODO(F9-3)：
-  //  1) 非空校验（用户名/密码）→ errorMsg
-  //  2) loading = true; errorMsg = ''
-  //  3) const data = await login(username.value, password.value)
-  //  4) setToken(data.token)
-  //  5) router.push(route.query.redirect || '/')
-  //  6) catch (e) { errorMsg.value = e.message } finally { loading.value = false }
-}
+  if (!username.value) {
+    errorMsg.value = '请输入用户名'
+    return
+  }
+  if (!password.value) {
+    errorMsg.value = '请输入密码'
+    return
+  }
 
-// TODO(F9-4)（可选）：进入页面时如果已经有 token，直接跳首页
+  loading.value = true
+  errorMsg.value = ''
+
+  try {
+    const data = await login(username.value, password.value)
+    saveLogin(data)
+    router.push(route.query.redirect || '/')
+  } catch (e) {
+    errorMsg.value = e.message
+  } finally {
+    loading.value = false
+  }
+
+}
 
 </script>
 

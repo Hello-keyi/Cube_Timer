@@ -1,88 +1,48 @@
-// TODO(F10-5)：F10 完成后，本文件所有函数改走 api/request.js（否则 401 不会自动处理）
-// 接口层：所有和后端交互的 fetch 都集中在这里
-const BASE_URL = '/api'
+// 接口层：统一走 request（自动带 token、统一解析 Result、401 自动跳登录）
+import { request, postJSON } from './request'
 
-/**
- * 读取全部成绩（后端按 id 倒序返回：新 → 旧）
- * @returns {Promise<Array<{ id: number, timeMs: number, createdAt: string }>>}
- */
-export async function fetchRecords() {
-  const res = await fetch(BASE_URL + '/record/list')
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || "读取失败")
-  return json.data
+/** 读取全部成绩（后端按 id 倒序：新 → 旧） */
+export function fetchRecords() {
+  return request('/record/list')
 }
 
-/**
- * 保存一条成绩（整数毫秒）
- * @param {number} timeMs
- */
-export async function createRecord(timeMs) {
-  const res = await fetch(BASE_URL + '/record', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ timeMs })
-})
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || "保存失败")
-  return json.data
+/** 保存一条成绩（整数毫秒） */
+export function createRecord(timeMs) {
+  return postJSON('/record', { timeMs })
 }
 
-export async function fetchRecordsPage(page = 1, size = 10) {
-  const res = await fetch(BASE_URL + '/record/page?page=' + page + '&size=' + size)
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || '读取分页失败')
-  return json.data
+/** 分页查询：返回 { total, records } */
+export function fetchRecordsPage(page = 1, size = 10) {
+  return request('/record/page?page=' + page + '&size=' + size)
 }
 
-export async function searchRecords(minMs, maxMs) {
-  // 可选参数：没填的就不要拼进 URL（否则后端拿 "undefined" 转 Integer 会报错）
+/** 按时间区间筛选（可选参数不传） */
+export function searchRecords(minMs, maxMs) {
   const params = new URLSearchParams()
   if (minMs !== '' && minMs !== null && minMs !== undefined) params.append('minMs', minMs)
   if (maxMs !== '' && maxMs !== null && maxMs !== undefined) params.append('maxMs', maxMs)
   const query = params.toString()
-
-  const res = await fetch(BASE_URL + '/record/search' + (query ? '?' + query : ''))
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || '查询失败')
-  return json.data
-
+  return request('/record/search' + (query ? '?' + query : ''))
 }
 
-export async function deleteRecord(id) {
-  const res = await fetch(BASE_URL + '/record/' + id, { method: 'DELETE' })
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || '删除失败')
-  return json.data
-}
-/**
- * 读取聚合统计（后端 D12）：total / bestText / worstText / avg5Text / avg12Text / todayBestText
- */
-export async function fetchStats() {
-  const res = await fetch(BASE_URL + '/record/stats')
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || '读取统计失败')
-  return json.data
+/** 删除一条成绩 */
+export function deleteRecord(id) {
+  return request('/record/' + id, { method: 'DELETE' })
 }
 
-/**
- * 读取单条成绩详情（含打乱列表）
- */
-export async function fetchRecordDetail(id) {
-  const res = await fetch(BASE_URL + '/record/' + id)
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || '读取详情失败')
-  return json.data
+/** 聚合统计（AVG5/12、最佳、最差、今日最佳） */
+export function fetchStats() {
+  return request('/record/stats')
 }
 
-/**
- * 给某条成绩添加一条打乱公式
- */
-export async function addScramble(id, scramble) {
-  const res = await fetch(BASE_URL + '/record/' + id + '/scramble?scramble=' + encodeURIComponent(scramble), {
-    method: 'POST'
+/** 单条成绩详情（含打乱列表） */
+export function fetchRecordDetail(id) {
+  return request('/record/' + id)
+}
+
+/** 给某条成绩添加打乱公式 */
+export function addScramble(id, scramble) {
+  return request('/record/' + id + '/scramble?scramble=' + encodeURIComponent(scramble), {
+    method: 'POST',
   })
-  const json = await res.json()
-  if (json.code !== 0) throw new Error(json.msg || '添加打乱失败')
-  return json.data
 }

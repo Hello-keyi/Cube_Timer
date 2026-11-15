@@ -13,12 +13,28 @@ const loading = ref(false)
 const errorMsg = ref('')
 
 async function submit() {
-  // TODO(F9-5)：
-  //  1) 非空校验 + 长度校验（用户名 3-20、密码 6-32）→ errorMsg
-  //  2) loading = true; errorMsg = ''
-  //  3) await register({ username: username.value, password: password.value, nickname: nickname.value })
-  //  4) 成功 → router.push('/login')（提示注册成功可选）
-  //  5) catch (e) { errorMsg.value = e.message } finally { loading.value = false }
+  if (!username.value || !password.value) {
+    errorMsg.value = '用户名和密码不能为空'
+    return
+  }
+  if (username.value.length < 3 || username.value.length > 20) {
+    errorMsg.value = '用户名长度应为 3-20 位'
+    return
+  }
+  if (password.value.length < 6 || password.value.length > 32) {
+    errorMsg.value = '密码长度应为 6-32 位'
+    return
+  }
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    await register({ username: username.value, password: password.value, nickname: nickname.value })
+    router.push('/login')
+  } catch (e) {
+    errorMsg.value = e.message
+  } finally {
+    loading.value = false
+  }
 }
 
 </script>

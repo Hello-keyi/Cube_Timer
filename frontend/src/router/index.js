@@ -5,7 +5,7 @@ import NotFoundView from '@/views/NotFoundView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import DetailView from '@/views/DetailView.vue'
-
+import { getToken } from '@/api/request'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -19,14 +19,11 @@ const router = createRouter({
     { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView },
   ],
 })
-
-
-// TODO(F10-3)：路由守卫（未登录访问受限页面 → 跳登录）
-// import { getToken } from '@/api/request'
-// router.beforeEach((to) => {
-//   if (to.meta.requiresAuth && !getToken()) {
-//     return { path: '/login', query: { redirect: to.fullPath } }
-//   }
-// })
+router.beforeEach((to) => {
+  // 检查路由是否需要身份验证
+  if (to.meta.requiresAuth && !getToken()) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+});
 
 export default router

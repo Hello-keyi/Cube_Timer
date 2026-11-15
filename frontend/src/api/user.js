@@ -5,20 +5,38 @@ const BASE_URL = '/api'
  * 登录
  * POST /user/login  body: { username, password }
  * 返回: { id, username, nickname, token }
- * TODO(F9-1)：
- *   参照 api/records.js 的写法：fetch → json → json.code !== 0 抛 Error(json.msg) → return json.data
- *   注意：登录接口不需要 token
+ * 前端请求到登录接口后，返回的 json.code !== 0 说明登录失败，抛出错误；否则登录成功，返回 json.data
  */
 export async function login(username, password) {
-  throw new Error('TODO(F9-1)：请实现 login(username, password)')
+
+  const res = await fetch(BASE_URL + '/user/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  })
+
+  const json = await res.json()
+  if (json.code !== 0) {
+    throw new Error(json.msg || '请求失败')
+  }
+  return json.data
 }
 
 /**
  * 注册
  * POST /user/register  body: { username, password, nickname }
  * 成功无 data；失败抛 Error(json.msg)
- * TODO(F9-2)：实现 register({ username, password, nickname })
+ * 前端请求到注册接口后，返回的 json.code !== 0 说明注册失败，抛出错误；否则注册成功，无需返回 data
  */
 export async function register({ username, password, nickname }) {
-  throw new Error('TODO(F9-2)：请实现 register()')
+  const res = await fetch(BASE_URL + '/user/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password, nickname })
+  })
+
+  const json = await res.json()
+  if (json.code !== 0) {
+    throw new Error(json.msg || '请求失败')
+  }
 }
