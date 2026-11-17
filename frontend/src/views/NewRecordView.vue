@@ -1,5 +1,5 @@
 <script setup>
-// F8 批量录入页（骨架 —— 你来实现 TODO）
+// F8 批量录入页：一次提交「成绩 + 多条打乱」（后端事务）
 // 契约：POST /record/full  body:{timeMs, scrambles?:string[]}  → Result<Void>（后端事务，失败整体回滚）
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -13,22 +13,38 @@ const submitting = ref(false)
 const errorMsg = ref('')
 
 function addScramble() {
-  // TODO(F8-1)：给 scrambles 加一行空字符串
+  scrambles.value.push('')
 }
 
 function removeScramble(index) {
-  // TODO(F8-2)：删掉第 index 行（至少保留 1 行）
+  // 至少保留 1 行（删空了就无法输入）
+  if (scrambles.value.length > 1) {
+    scrambles.value.splice(index, 1)
+  }
 }
 
 async function submit() {
-  // TODO(F8-3)：
-  //  1) 校验 timeSec：空 / 非数字 / <=0 → errorMsg 并 return
-  //  2) 组装：timeMs = Math.round(Number(timeSec.value) * 1000)
-  //  3) 过滤空白打乱：scrambles.value.map(s => s.trim()).filter(Boolean)
-  //  4) submitting = true; errorMsg = ''
-  //  5) await createRecordFull({ timeMs, scrambles: 过滤后的数组 })
-  //  6) 成功 → router.push('/history')
-  //  7) catch (e) { errorMsg.value = e.message } finally { submitting.value = false }
+  if (!timeSec.value) {
+    errorMsg.value = '请输入成绩'
+    return
+  }
+  const seconds = Number(timeSec.value)
+  if (Number.isNaN(seconds) || seconds <= 0) {
+    errorMsg.value = '成绩必须是正数'
+    return
+  }
+  const timeMs = Math.round(seconds * 1000)
+  const filteredScrambles = scrambles.value.map(s => s.trim()).filter(Boolean)
+  submitting.value = true
+  errorMsg.value = ''
+  try {
+    await createRecordFull({ timeMs, scrambles: filteredScrambles })
+    router.push('/history')
+  } catch (e) {
+    errorMsg.value = e.message
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 

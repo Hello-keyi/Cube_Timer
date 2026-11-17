@@ -49,7 +49,5 @@ export function addScramble(id, scramble) {
 
 /** 批量录入：一次提交「成绩 + 多条打乱」（后端 D16 事务） */
 export function createRecordFull({ timeMs, scrambles }) {
-  // TODO(F8-4)：用 postJSON 提交到 '/record/full'
-  //   body: { timeMs, scrambles }（scrambles 可以为空数组）
-  throw new Error('TODO(F8-4)：请实现 createRecordFull()')
+  return postJSON('/record/full', { timeMs, scrambles })
 }
