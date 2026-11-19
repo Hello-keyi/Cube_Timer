@@ -1,6 +1,8 @@
 package com.example.backend.service.impl;
 
 import com.example.backend.common.PageResult;
+import com.example.backend.context.BaseContext;
+import com.example.backend.dto.CubeRecordFullDTO;
 import com.example.backend.entity.CubeRecord;
 import com.example.backend.entity.CubeScramble;
 import com.example.backend.exception.BusinessException;
@@ -11,11 +13,15 @@ import com.example.backend.util.StatsUtils;
 import com.example.backend.vo.CubeRecordDetailVO;
 import com.example.backend.vo.CubeRecordVO;
 import com.example.backend.vo.RecordStatsVO;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
@@ -31,7 +37,9 @@ import java.util.List;
 @Slf4j
 public class CubeRecordServiceImpl implements CubeRecordService {
 
-    private static final String STATS_KEY = "cube:stats";
+    private String statsKey(Integer userId) {
+        return "cube:stats:" + userId;
+    }
     private static final long STATS_TTL_SECONDS = 60;
 
     @Autowired
@@ -48,42 +56,50 @@ public class CubeRecordServiceImpl implements CubeRecordService {
 
     @Override
     public List<CubeRecordVO> list() {
-        return cubeRecordMapper.list().stream().map(this::toCubeRecordVO).toList();
+        return cubeRecordMapper.list(currentUserId()).stream().map(this::toCubeRecordVO).toList();
     }
 
-
+    @Operation(summary = "新增成绩", description = "只保存成绩，不含打乱公式")
     @Override
     public void add(Integer timeMs) {
 
         CubeRecord record = new CubeRecord();
         record.setTimeMs(timeMs);
+        record.setUserId(currentUserId());
         cubeRecordMapper.insert(record);
         log.info("新增成绩成功 timeMs={}", timeMs);
         evictStatsCache();
     }
 
+    @Operation(summary = "成绩列表", description = "返回当前用户的全部成绩，按 id 倒序")
     @Override
-    public PageResult<CubeRecordVO> page(int page, int size) {
-
+    public PageResult<CubeRecordVO> page(int page, int size, Integer minMs, Integer maxMs) {
         if (page <= 0 || size <= 0) {
             throw new BusinessException("查询数据错误");
         }
-
-        long total = cubeRecordMapper.count();
-        int offset = (page - 1) * size;
-        List<CubeRecord> records = cubeRecordMapper.page(offset, size);
-        List<CubeRecordVO> vos = records.stream().map(this::toCubeRecordVO).toList();// ③ 拿当页
-        return new PageResult<>(total, vos);
+        Integer userId = currentUserId();
+        PageHelper.startPage(page, size);
+        List<CubeRecord> records = cubeRecordMapper.listForPage(userId, minMs, maxMs);
+        PageInfo<CubeRecord> info = new PageInfo<>(records);
+        List<CubeRecordVO> vos = info.getList().stream().map(this::toCubeRecordVO).toList();
+        return new PageResult<>(info.getTotal(), vos);
     }
 
+    @Operation(summary = "分页查询", description = "支持时间区间筛选")
     @Override
     public List<CubeRecordVO> search(Integer minMs , Integer maxMs) {
-        return cubeRecordMapper.search(minMs, maxMs).stream().map(this::toCubeRecordVO).toList();
+        return cubeRecordMapper.search(currentUserId(),minMs, maxMs).stream().map(this::toCubeRecordVO).toList();
     }
 
+    @Operation(summary = "成绩更新" , description = "根据id查用户，只改成绩")
     @Override
     public void update(Integer id, Integer timeMs){
-        int rows = cubeRecordMapper.update(id, timeMs);
+        CubeRecord record = new CubeRecord();
+        record.setId(id);
+        record.setUserId(currentUserId());
+        record.setTimeMs(timeMs);
+
+        int rows = cubeRecordMapper.update(record);
         if ( rows == 0 ) {
             throw new BusinessException("记录不存在");
         }
@@ -91,12 +107,13 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         evictStatsCache();
     }
 
+    @Operation(summary = "根据id删除成绩"  , description = "id查数据，删除相关数据")
     @Override
     public void delete(Integer id){
         if (id == null || id <= 0) {
             throw new BusinessException("id应该大于0");
         }
-        int row = cubeRecordMapper.deleteById(id);
+        int row = cubeRecordMapper.deleteById(currentUserId() , id);
         if ( row == 0 ) {
             throw new BusinessException("记录不存在");
         }
@@ -104,6 +121,7 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         evictStatsCache();
     }
 
+    @Operation(summary = "查询详细数据" , description = "根据id查询所有详细数据")
     @Override
     public CubeRecordDetailVO getDetail(Integer id) {
 
@@ -111,7 +129,7 @@ public class CubeRecordServiceImpl implements CubeRecordService {
             throw new BusinessException("id应该大于0");
         }
 
-        CubeRecord entity = cubeRecordMapper.getById(id);
+        CubeRecord entity = cubeRecordMapper.getById(currentUserId(),id);
 
         if (entity == null) {
             throw new BusinessException("记录不存在");
@@ -124,6 +142,7 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         return vos;
     }
 
+    @Operation(summary = "添加成绩的打乱公式"  , description = "根据recordId查询数据，添加公式")
     @Override
     public void addScramble(Integer recordId, String scramble) {
         if (recordId == null || recordId <= 0) {
@@ -131,7 +150,7 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         }
 
         // ① 先确认这条成绩真的存在（外键约束会抛异常，不如提前给友好提示）
-        if (cubeRecordMapper.getById(recordId) == null) {
+        if (cubeRecordMapper.getById(currentUserId(),recordId) == null) {
             throw new BusinessException("记录不存在");
         }
 
@@ -148,24 +167,26 @@ public class CubeRecordServiceImpl implements CubeRecordService {
     }
 
     /** 真正的查库逻辑（被 getStats 调用；缓存未命中时才走这里） */
+    @Operation(summary = "缓存未命中查询"  , description = "查询数据")
     private RecordStatsVO buildStats() {
-        long total = cubeRecordMapper.count();
-        Integer best  = cubeRecordMapper.minTime();
-        Integer worst = cubeRecordMapper.maxTime();
-        List<Integer> recent5  = cubeRecordMapper.recentTimes(5);
-        List<Integer> recent12 = cubeRecordMapper.recentTimes(12);
+        long total = cubeRecordMapper.count(currentUserId());
+        Integer best  = cubeRecordMapper.minTime(currentUserId());
+        Integer worst = cubeRecordMapper.maxTime(currentUserId());
+        List<Integer> recent5  = cubeRecordMapper.recentTimes(currentUserId(),5);
+        List<Integer> recent12 = cubeRecordMapper.recentTimes(currentUserId(),12);
         LocalDateTime begin = LocalDate.now().atStartOfDay();
         LocalDateTime end   = LocalDate.now().atTime(LocalTime.MAX);
-        Integer todayBest = cubeRecordMapper.todayBest(begin, end);
+        Integer todayBest = cubeRecordMapper.todayBest(currentUserId(),begin, end);
         log.info("查询统计（查库） total={} best={} worst={}", total, best, worst);
         return toStatsVO(total, best, worst, recent5, recent12, todayBest);
     }
 
+    @Operation(summary = "查询，判断是否命中缓存"  , description = "查询数据")
     @Override
     public RecordStatsVO getStats() {
         // ① 先看缓存
         try {
-            String cached = stringRedisTemplate.opsForValue().get(STATS_KEY);
+            String cached = stringRedisTemplate.opsForValue().get(statsKey(currentUserId()));
             if (cached != null) {
                 log.info("统计命中缓存");
                 return objectMapper.readValue(cached, RecordStatsVO.class);
@@ -181,7 +202,7 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         // ③ 写回缓存，60 秒后自动过期
         try {
             stringRedisTemplate.opsForValue().set(
-                    STATS_KEY,
+                    statsKey(currentUserId()),
                     objectMapper.writeValueAsString(vo),
                     Duration.ofSeconds(STATS_TTL_SECONDS));
             log.info("统计已写入缓存 TTL={}s", STATS_TTL_SECONDS);
@@ -192,10 +213,40 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         return vo;
     }
 
+    @Operation(summary = "添加数据，完整"  , description = "添加数据，用dto")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void addFull(CubeRecordFullDTO dto) {
+        CubeRecord record = new CubeRecord();
+        record.setTimeMs(dto.getTimeMs());
+        record.setUserId(currentUserId());
+        cubeRecordMapper.insert(record);
+
+        Integer recordId = record.getId();
+        if (recordId == null) {
+            throw new BusinessException("新添成绩失败");
+        }
+
+        List<String> scrambles = dto.getScrambles();
+        if ( scrambles != null && !scrambles.isEmpty()) {
+            for ( int i = 0; i < scrambles.size(); i++ ) {
+                CubeScramble cs = new CubeScramble();
+                cs.setScramble(scrambles.get(i));
+                cs.setSeq(i + 1);
+                cs.setRecordId(recordId);
+                cubeScrambleMapper.insert(cs);
+            }
+        }
+        evictStatsCache();
+        log.info("新增成绩(含打乱)成功 recordId={} 打乱数={}", recordId,
+                scrambles == null ? 0 : scrambles.size());
+    }
+
     /** 数据变了就把统计缓存删掉，下次访问自然重建 */
+    @Operation(summary = "缓存清理"  , description = "缓存数据管理")
     private void evictStatsCache() {
         try {
-            stringRedisTemplate.delete(STATS_KEY);
+            stringRedisTemplate.delete(statsKey(currentUserId()));
             log.info("已清除统计缓存");
         } catch (Exception e) {
             log.warn("清除缓存失败：{}", e.getMessage());
@@ -233,7 +284,7 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         vo.setTimeText(String.format(Locale.ROOT, "%.3f", seconds));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        vo.setCreatedText(entity.getCreatedAt().format(formatter));
+        vo.setCreatedText(entity.getCreateTime().format(formatter));
         return vo;
     }
 
@@ -241,7 +292,7 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         CubeRecordDetailVO vo = new CubeRecordDetailVO();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        vo.setCreatedText(cubeRecord.getCreatedAt().format(formatter));
+        vo.setCreatedText(cubeRecord.getCreateTime().format(formatter));
 
         double seconds = cubeRecord.getTimeMs() / 1000.0;
         vo.setTimeText(String.format(Locale.ROOT, "%.3f", seconds));
@@ -251,5 +302,13 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         vo.setId(cubeRecord.getId());
 
         return vo;
+    }
+
+    private Integer currentUserId() {
+        Integer id = BaseContext.getContextId();
+        if (id == null) {
+            throw new BusinessException("未登录");
+        }
+        return id;
     }
 }

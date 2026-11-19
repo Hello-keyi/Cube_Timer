@@ -4,24 +4,39 @@
 <mapper namespace="com.example.backend.mapper.CubeRecordMapper">
 
     <select id="list" resultType="com.example.backend.entity.CubeRecord">
-        select * from cube_record order by id desc
+        select * from cube_record where user_id = #{userId} order by id desc
     </select>
 
-    <insert id="insert">
-        insert into cube_record (time_ms) values (#{timeMs})
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into cube_record
+        (user_id, time_ms, create_time, create_user, update_time, update_user)
+        values
+        (#{userId}, #{timeMs}, #{createTime}, #{createUser}, #{updateTime}, #{updateUser})
     </insert>
 
     <select id="count" resultType="long">
-        select count(*) from cube_record
+        select count(*) from cube_record where user_id = #{userId}
     </select>
 
-    <select id="page" resultType="com.example.backend.entity.CubeRecord">
-        select * from cube_record order by id desc limit #{offset}, #{size}
+
+    <select id="listForPage" resultType="com.example.backend.entity.CubeRecord">
+        select * from cube_record
+        <where>
+            user_id = #{userId}
+            <if test="minMs != null">
+                and time_ms &gt;= #{minMs}
+            </if>
+            <if test="maxMs != null">
+                and time_ms &lt;= #{maxMs}
+            </if>
+        </where>
+        order by id desc
     </select>
 
     <select id="search" resultType="com.example.backend.entity.CubeRecord">
         select * from cube_record
         <where>
+            user_id = #{userId}
             <if test="minMs != null">
                 and time_ms &gt;= #{minMs}
             </if>
@@ -33,32 +48,37 @@
     </select>
 
     <update id="update">
-        update cube_record set time_ms = #{timeMs} where id = #{id}
+        update cube_record
+        set time_ms = #{timeMs},
+        update_time = #{updateTime},
+        update_user = #{updateUser}
+        where id = #{id} and user_id = #{userId}
     </update>
 
     <delete id="deleteById">
-        delete from cube_record where id = #{id}
+        delete from cube_record where id = #{id} and user_id = #{userId}
     </delete>
 
     <select id="getById" resultType="com.example.backend.entity.CubeRecord">
-        select * from cube_record where id = #{id}
+        select * from cube_record where id = #{id} and user_id = #{userId}
     </select>
 
-
     <select id="minTime" resultType="java.lang.Integer">
-        select min(time_ms) from cube_record
+        select min(time_ms) from cube_record where user_id = #{userId}
     </select>
 
     <select id="maxTime" resultType="java.lang.Integer">
-        select max(time_ms) from cube_record
+        select max(time_ms) from cube_record where user_id = #{userId}
     </select>
 
     <select id="recentTimes" resultType="java.lang.Integer">
-        select time_ms from cube_record order by id desc limit #{n}
+        select time_ms from cube_record where user_id = #{userId}
+        order by id desc limit #{n}
     </select>
 
     <select id="todayBest" resultType="java.lang.Integer">
-        select min(time_ms) from cube_record where created_at &gt;= #{begin} and created_at &lt;= #{end}
+        select min(time_ms) from cube_record
+        where user_id = #{userId}
+        and created_at &gt;= #{begin} and created_at &lt;= #{end}
     </select>
-
 </mapper>

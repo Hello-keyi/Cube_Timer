@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.common.PageResult;
+import com.example.backend.dto.CubeRecordFullDTO;
 import com.example.backend.vo.CubeRecordDetailVO;
 import com.example.backend.vo.CubeRecordVO;
 import com.example.backend.vo.RecordStatsVO;
@@ -13,7 +14,7 @@ public interface CubeRecordService {
 
     void add(Integer timeMs);
 
-    PageResult<CubeRecordVO> page (int page, int size);
+    PageResult<CubeRecordVO> page(int page, int size, Integer minMs, Integer maxMs);
 
     List<CubeRecordVO> search(Integer minMs, Integer maxMs);
 
@@ -27,4 +28,6 @@ public interface CubeRecordService {
     void addScramble(Integer recordId, String scramble);
 
     RecordStatsVO getStats();
+
+    void addFull(CubeRecordFullDTO dto);
 }

@@ -9,3 +9,7 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+# application.yml（通用配置）里加 —— 默认关闭
+springdoc:
+  api-docs:
+    enabled: false

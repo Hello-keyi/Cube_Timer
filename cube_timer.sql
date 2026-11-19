@@ -24,3 +24,35 @@ CREATE TABLE cube_scramble (
   CONSTRAINT fk_scramble_record
     FOREIGN KEY (record_id) REFERENCES cube_record(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='成绩对应的打乱公式';
+
+CREATE TABLE `user` (
+  id          INT          NOT NULL AUTO_INCREMENT,
+  username    VARCHAR(50)  NOT NULL COMMENT '用户名',
+  password    VARCHAR(100) NOT NULL COMMENT 'BCrypt 密文（约 60 字符，留余量）',
+  nickname    VARCHAR(50)  DEFAULT NULL COMMENT '昵称',
+  status      TINYINT      NOT NULL DEFAULT 1 COMMENT '1=正常 0=禁用',
+  create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+
+
+
+ALTER TABLE cube_record
+  ADD COLUMN user_id INT NULL COMMENT '所属用户 id' AFTER id;
+
+
+ALTER TABLE cube_record CHANGE COLUMN created_at create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间';
+
+
+ALTER TABLE cube_record
+  ADD COLUMN update_time DATETIME NULL COMMENT '更新时间' AFTER create_time,
+  ADD COLUMN create_user INT NULL COMMENT '创建人 id' AFTER update_time,
+  ADD COLUMN update_user INT NULL COMMENT '更新人 id' AFTER create_user;
+
+
+UPDATE cube_record SET create_user = 2, update_user = 2 WHERE create_user IS NULL;
+
+
+SHOW COLUMNS FROM cube_record;
