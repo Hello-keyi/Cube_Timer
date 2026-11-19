@@ -20,6 +20,7 @@ const router = createRouter({
     { path: '/record/:id', name: 'recordDetail', component: DetailView, meta: { requiresAuth: true } },
     // 404 兜底：放在最后，匹配所有没命中的路径
     { path: '/:pathMatch(.*)*', name: 'notFound', component: NotFoundView },
+    { path: '/stats', name: 'stats', component: StatsView, meta: { requiresAuth: true } },
   ],
 })
 router.beforeEach((to) => {
