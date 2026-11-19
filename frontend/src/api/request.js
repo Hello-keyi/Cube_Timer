@@ -18,7 +18,7 @@ export function clearToken() {
  * 统一请求
  * @param {string} url  以 / 开头，不含 /api 前缀（如 '/record/list'）
  * @param {RequestInit} options
- * @returns {Promise<any>} 后端 Result 里的 data
+ * @returns {Promise<any>} 后端 Result 里的 data 
  */
 export async function request(url, options = {}) {
   //前端拿到请求之后分离出请求头，如果token存在，就在请求头中加上Authorization字段，值为Bearer + token，然后发起请求，如果返回状态码是401，说明token过期或者无效，就清除token并跳转到登录页，并抛出错误；如果返回的json的code不为0，说明请求失败，就抛出错误；最后返回json.data

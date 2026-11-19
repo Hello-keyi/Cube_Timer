@@ -11,9 +11,12 @@ export function createRecord(timeMs) {
   return postJSON('/record', { timeMs })
 }
 
-/** 分页查询：返回 { total, records } */
-export function fetchRecordsPage(page = 1, size = 10) {
-  return request('/record/page?page=' + page + '&size=' + size)
+/** 分页查询（支持 minMs/maxMs 条件）：返回 { total, records } */
+export function fetchRecordsPage(page = 1, size = 10, filters = {}) {
+  const params = new URLSearchParams({ page, size })
+  if (filters.minMs !== undefined && filters.minMs !== null) params.append('minMs', filters.minMs)
+  if (filters.maxMs !== undefined && filters.maxMs !== null) params.append('maxMs', filters.maxMs)
+  return request('/record/page?' + params.toString())
 }
 
 /** 按时间区间筛选（可选参数不传） */

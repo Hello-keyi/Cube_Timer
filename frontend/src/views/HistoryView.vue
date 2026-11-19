@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import RecordList from '@/components/RecordList.vue'
-import { fetchRecordsPage, searchRecords, deleteRecord } from '@/api/records'
+import { fetchRecordsPage, deleteRecord } from '@/api/records'
 
 // ===== 分页状态 =====
 const SIZE = 5
@@ -15,6 +15,8 @@ const errorMsg = ref('')
 const minSec = ref('')   // 用户输入的是"秒"
 const maxSec = ref('')
 const filtered = ref(false)
+// 真正传给后端的筛选条件（毫秒）；undefined 表示不传
+const filters = ref({ minMs: undefined, maxMs: undefined })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / SIZE)))
 const canPrev = computed(() => page.value > 1)
@@ -25,7 +27,7 @@ async function loadPage() {
   loading.value = true
   errorMsg.value = ''
   try {
-    const data = await fetchRecordsPage(page.value, SIZE) // { total, records }
+    const data = await fetchRecordsPage(page.value, SIZE, filters.value) // { total, records }
     rows.value = data.records
     total.value = data.total
     if (page.value > totalPages.value) page.value = totalPages.value
@@ -44,10 +46,8 @@ function toMs(text, label) {
   return Math.round(n * 1000)
 }
 
-// ===== 执行筛选：调后端 /record/search =====
+// ===== 执行筛选：条件交给分页接口（后端 /record/page?minMs=&maxMs=） =====
 async function applyFilter() {
-  loading.value = true
-  errorMsg.value = ''
   try {
     const minMs = toMs(minSec.value, '最小秒数')
     const maxMs = toMs(maxSec.value, '最大秒数')
@@ -57,14 +57,12 @@ async function applyFilter() {
     if (minMs !== undefined && maxMs !== undefined && minMs > maxMs) {
       throw new Error('最小值不能大于最大值')
     }
-    rows.value = await searchRecords(minMs, maxMs)
-    total.value = rows.value.length
+    filters.value = { minMs, maxMs }
     filtered.value = true
     page.value = 1
+    await loadPage()          // page 已经是 1 时 watch 不触发，这里手动加载
   } catch (e) {
     errorMsg.value = '筛选失败：' + e.message
-  } finally {
-    loading.value = false
   }
 }
 
@@ -72,6 +70,7 @@ function clearFilter() {
   minSec.value = ''
   maxSec.value = ''
   filtered.value = false
+  filters.value = { minMs: undefined, maxMs: undefined }
   page.value = 1
   loadPage()
 }
@@ -81,20 +80,14 @@ async function handleDelete(id) {
   if (!window.confirm('确定删除这条成绩吗？')) return
   try {
     await deleteRecord(id)
-    if (filtered.value) {
-      await applyFilter()   // 筛选状态下按当前条件重查
-    } else {
-      await loadPage()      // 分页状态下重拉当前页
-    }
+    await loadPage()        // 带着当前筛选条件重拉
   } catch (e) {
     errorMsg.value = '删除失败：' + e.message
   }
 }
 
 onMounted(loadPage)
-watch(page, () => {
-  if (!filtered.value) loadPage()   // 筛选状态下翻页按钮不显示
-})
+watch(page, loadPage)
 </script>
 
 <template>
@@ -127,8 +120,8 @@ watch(page, () => {
       @delete="handleDelete"
     />
 
-    <!-- 分页按钮（筛选状态下隐藏） -->
-    <div v-if="!filtered" class="pager">
+    <!-- 分页按钮（筛选状态下也可以翻页） -->
+    <div class="pager">
       <button class="btn" :disabled="!canPrev || loading" @click="page = page - 1">上一页</button>
       <span class="pager-info">第 {{ page }} / {{ totalPages }} 页</span>
       <button class="btn" :disabled="!canNext || loading" @click="page = page + 1">下一页</button>
