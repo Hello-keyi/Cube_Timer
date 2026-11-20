@@ -43,4 +43,6 @@ public interface CubeRecordMapper {
     Integer todayBest(@Param("userId") Integer userId,
                       @Param("begin") LocalDateTime begin,
                       @Param("end") LocalDateTime end);
+
+    int deleteBefore(@Param("before") LocalDateTime before);
 }

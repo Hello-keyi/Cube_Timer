@@ -79,6 +79,10 @@
     <select id="todayBest" resultType="java.lang.Integer">
         select min(time_ms) from cube_record
         where user_id = #{userId}
-        and created_at &gt;= #{begin} and created_at &lt;= #{end}
+        and create_time &gt;= #{begin} and create_time &lt;= #{end}
     </select>
+
+    <delete id="deleteBefore">
+        delete from cube_record where create_time &lt; #{before}
+    </delete>
 </mapper>

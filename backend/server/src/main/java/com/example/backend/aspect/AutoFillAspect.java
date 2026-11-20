@@ -29,7 +29,6 @@ public class AutoFillAspect {
         AutoFill autoFill = signature.getMethod().getAnnotation(AutoFill.class);
         if (autoFill == null) {
             return;
-
         }
         OperationType type = autoFill.value();
         Object[] args = joinPoint.getArgs();

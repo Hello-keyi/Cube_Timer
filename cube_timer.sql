@@ -56,3 +56,18 @@ UPDATE cube_record SET create_user = 2, update_user = 2 WHERE create_user IS NUL
 
 
 SHOW COLUMNS FROM cube_record;
+
+
+USE cube_timer;
+
+CREATE TABLE daily_stat (
+  id          INT      NOT NULL AUTO_INCREMENT,
+  stat_date   DATE     NOT NULL COMMENT '统计日期',
+  user_id     INT      NOT NULL COMMENT '用户 id',
+  total_count INT      NOT NULL DEFAULT 0 COMMENT '当天总次数',
+  best_ms     INT      NULL COMMENT '当天最佳成绩（毫秒）',
+  avg_ms      INT      NULL COMMENT '当天平均成绩（毫秒）',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_date_user (stat_date, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='每日统计';

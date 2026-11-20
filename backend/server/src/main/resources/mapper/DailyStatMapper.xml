@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.backend.mapper.DailyStatMapper">
+
+    <select id="selectStatByDate" resultType="com.example.backend.entity.DailyStat">
+        select user_id, count(*) as total_count, min(time_ms) as best_ms, round(avg(time_ms)) as avg_ms
+        from cube_record
+        where create_time >= #{begin} and create_time &lt; #{end}
+        group by user_id
+    </select>
+
+    <insert id="insertOrUpdate">
+        insert into daily_stat (stat_date, user_id, total_count, best_ms, avg_ms)
+        values (#{statDate}, #{userId}, #{totalCount}, #{bestMs}, #{avgMs})
+        on duplicate key update
+        total_count = #{totalCount},
+        best_ms = #{bestMs},
+        avg_ms = #{avgMs}
+    </insert>
+
+</mapper>
