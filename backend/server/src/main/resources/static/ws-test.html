@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket 测试</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #status { font-weight: bold; }
+        li { margin: 4px 0; color: #0a7; }
+    </style>
+</head>
+<body>
+<h2>WebSocket 实时推送测试</h2>
+<p>状态：<span id="status">连接中...</span></p>
+<p>提示：打开<b>两个</b>浏览器标签页，在其中一个调接口新增成绩，两个页面都应该收到消息。</p>
+<h4>收到的消息：</h4>
+<ul id="msgs"></ul>
+<script>
+    // 随机生成一个 sid，避免多标签页冲突
+    const sid = Math.random().toString(36).slice(2, 8);
+    const url = `ws://${location.hostname}:8081/ws/${sid}`;
+    const ws = new WebSocket(url);
+
+    ws.onopen = () => {
+        document.getElementById('status').textContent = `已连接（sid=${sid}）`;
+        document.getElementById('status').style.color = '#0a7';
+    };
+    ws.onclose = () => {
+        document.getElementById('status').textContent = '已断开';
+        document.getElementById('status').style.color = '#c00';
+    };
+    ws.onerror = () => {
+        document.getElementById('status').textContent = '连接出错';
+    };
+    ws.onmessage = (e) => {
+        const li = document.createElement('li');
+        li.textContent = `[${new Date().toLocaleTimeString()}] ${e.data}`;
+        document.getElementById('msgs').prepend(li);
+    };
+</script>
+</body>
+</html>

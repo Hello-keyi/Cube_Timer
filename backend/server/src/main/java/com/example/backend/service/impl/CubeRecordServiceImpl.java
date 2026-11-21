@@ -13,6 +13,7 @@ import com.example.backend.util.StatsUtils;
 import com.example.backend.vo.CubeRecordDetailVO;
 import com.example.backend.vo.CubeRecordVO;
 import com.example.backend.vo.RecordStatsVO;
+import com.example.backend.websocket.WebSocketServer;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +25,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
+import java.net.http.WebSocket;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -69,6 +71,9 @@ public class CubeRecordServiceImpl implements CubeRecordService {
         cubeRecordMapper.insert(record);
         log.info("新增成绩成功 timeMs={}", timeMs);
         evictStatsCache();
+        WebSocketServer.broadcast(
+                String.format("{\"type\":\"NEW_RECORD\",\"timeMs\":%d}", timeMs)
+        );
     }
 
     @Operation(summary = "成绩列表", description = "返回当前用户的全部成绩，按 id 倒序")
