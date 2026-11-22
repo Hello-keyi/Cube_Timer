@@ -1,6 +1,6 @@
 <script setup>
 import RecordList from '@/components/RecordList.vue'
-import { fetchRecordsPage, deleteRecord } from '@/api/records'
+import { deleteRecord, exportRecords, fetchRecordsPage } from '@/api/records'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 // ===== 分页状态 =====
 const SIZE = 5
@@ -16,6 +16,7 @@ const maxSec = ref('')
 const filtered = ref(false)
 // 真正传给后端的筛选条件（毫秒）；undefined 表示不传
 const filters = ref({ minMs: undefined, maxMs: undefined })
+const exporting = ref(false)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / SIZE)))
 const canPrev = computed(() => page.value > 1)
@@ -74,6 +75,26 @@ function clearFilter() {
   loadPage()
 }
 
+// ===== 导出 Excel =====
+async function handleExport() {
+  exporting.value = true
+  try {
+    const blob = await exportRecords()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '成绩导出-' + new Date().toISOString().slice(0, 10) + '.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    errorMsg.value = '导出失败：' + e.message
+  } finally {
+    exporting.value = false
+  }
+}
+
 // ===== 删除 =====
 async function handleDelete(id) {
   if (!window.confirm('确定删除这条成绩吗？')) return
@@ -115,6 +136,9 @@ watch(page, loadPage)
       <input v-model="maxSec" class="filter-input" type="number" min="0" step="0.001" placeholder="最大秒数" />
       <button class="btn" :disabled="loading" @click="applyFilter">筛选</button>
       <button v-if="filtered" class="btn" :disabled="loading" @click="clearFilter">清除</button>
+      <button class="btn" :disabled="exporting" @click="handleExport">
+        {{ exporting ? '导出中…' : '导出 Excel' }}
+      </button>
     </div>
 
     <!-- 三态显示 -->

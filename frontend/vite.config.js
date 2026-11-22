@@ -23,6 +23,11 @@ export default defineConfig({
         target: 'ws://localhost:8081',
         ws: true,
       },
+      // 上传后的图片（后端 /uploads/** 静态映射）
+      '/uploads': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      },
     },
   },
 })
