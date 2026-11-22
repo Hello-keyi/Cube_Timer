@@ -120,8 +120,8 @@ mvn spring-boot:run
 或用打包产物：
 
 ```bash
-mvn clean package
-java -jar target/backend-0.0.1-SNAPSHOT.jar
+mvn -DskipTests package
+java -jar server/target/server-0.0.1-SNAPSHOT.jar（多模块后产物在 server 模块）
 ```
 
 后端地址：http://localhost:8081

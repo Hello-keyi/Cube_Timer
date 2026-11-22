@@ -3,7 +3,7 @@
 set -u
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJ="$(dirname "$SELF_DIR")"
-JAR="$PROJ/backend/target/backend-0.0.1-SNAPSHOT.jar"
+JAR="$PROJ/backend/server/target/server-0.0.1-SNAPSHOT.jar"
 
 echo "[1/4] 启动 MySQL ..."
 service mysql start >/dev/null 2>&1 || true
@@ -23,7 +23,7 @@ if pgrep -f 'backend-0.0.1-SNAPSHOT.jar' >/dev/null 2>&1; then
   echo "  后端已在运行"
 else
   if [ ! -f "$JAR" ]; then
-    echo "  ❌ 找不到 jar：$JAR（先在 backend 目录执行 mvn clean package）"
+    echo "  ❌ 找不到 jar：$JAR（先在 backend 目录执行 mvn -DskipTests package）"
     exit 1
   fi
   runuser -u yi -- bash -c "cd '$PROJ/backend' && nohup java -jar '$JAR' > /tmp/cube-timer-backend.log 2>&1 &"
