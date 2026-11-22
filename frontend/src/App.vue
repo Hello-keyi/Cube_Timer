@@ -2,13 +2,13 @@
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useRecords } from '@/composables/useRecords'
 import { useAuth } from '@/composables/useAuth'
+import { useRecordSocket } from '@/composables/useRecordSocket'
 
 // 全局错误提示（保存/读取失败都会显示在底部）
 const { error } = useRecords()
-
 const { user, isLoggedIn, logout } = useAuth()
 const router = useRouter()
-
+useRecordSocket()
 function handleLogout() {
   logout()
   router.push('/login')

@@ -1,8 +1,7 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
 import RecordList from '@/components/RecordList.vue'
 import { fetchRecordsPage, deleteRecord } from '@/api/records'
-
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 // ===== 分页状态 =====
 const SIZE = 5
 const page = ref(1)
@@ -86,7 +85,19 @@ async function handleDelete(id) {
   }
 }
 
-onMounted(loadPage)
+function onNewRecord() {
+  if (!loading.value) loadPage()
+}
+
+onMounted(() => {
+  loadPage()
+  window.addEventListener('cube:new-record', onNewRecord)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('cube:new-record', onNewRecord)
+})
+
 watch(page, loadPage)
 </script>
 

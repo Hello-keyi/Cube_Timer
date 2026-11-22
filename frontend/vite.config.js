@@ -18,6 +18,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      // 前端请求 /ws 时，转发到后端 ws://localhost:8081
+      '/ws': {
+        target: 'ws://localhost:8081',
+        ws: true,
+      },
     },
   },
 })
