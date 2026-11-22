@@ -4,6 +4,9 @@
 spring:
   profiles:
     active: dev
+  multipart:
+    max-file-size: 5MB        # 单个文件最大 5MB
+    max-request-size: 10MB    # 一次请求最大 10MB
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
