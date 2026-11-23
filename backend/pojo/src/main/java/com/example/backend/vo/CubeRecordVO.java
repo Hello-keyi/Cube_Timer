@@ -2,7 +2,6 @@ package com.example.backend.vo;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
 
 @Data
 public class CubeRecordVO {

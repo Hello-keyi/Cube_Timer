@@ -7,15 +7,21 @@ import com.example.backend.dto.CubeRecordAddDTO;
 import com.example.backend.dto.CubeRecordFullDTO;
 import com.example.backend.dto.CubeRecordUpdateDTO;
 import com.example.backend.service.CubeRecordService;
+import com.example.backend.service.RecordExportService;
 import com.example.backend.vo.CubeRecordDetailVO;
 import com.example.backend.vo.CubeRecordVO;
 import com.example.backend.vo.RecordStatsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -23,6 +29,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/record")
 public class CubeRecordController {
+
+    @Autowired
+    private RecordExportService recordExportService;
+
     @Autowired
     private CubeRecordService cubeRecordService;
 
@@ -102,5 +112,19 @@ public class CubeRecordController {
     public Result<Void> addFull(@Valid @RequestBody CubeRecordFullDTO dto) {
         cubeRecordService.addFull(dto);
         return Result.success();
+    }
+
+    @Operation(summary = "导出成绩 Excel", description = "导出当前用户的全部成绩，浏览器直接下载 .xlsx")
+    @GetMapping("/export")
+    public void export(HttpServletResponse response) throws IOException  {
+        response.setContentType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = "成绩导出" + LocalDate.now() + ".xlsx";
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=" + encoded + "; filename*=UTF-8''" + encoded);
+        recordExportService.exportTo(response.getOutputStream());
     }
 }

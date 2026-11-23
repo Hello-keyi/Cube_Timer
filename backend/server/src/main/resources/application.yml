@@ -1,18 +1,20 @@
-﻿server:
+server:
   port: 8081
 
 spring:
   profiles:
     active: dev
-  multipart:
-    max-file-size: 5MB        # 单个文件最大 5MB
-    max-request-size: 10MB    # 一次请求最大 10MB
+  servlet:
+    multipart:
+      max-file-size: 5MB        # 单个文件最大 5MB
+      max-request-size: 10MB    # 一次请求最大 10MB
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-# application.yml（通用配置）里加 —— 默认关闭
+
+# 接口文档：通用配置默认关闭，仅在 dev 打开（生产暴露接口地图是安全风险）
 springdoc:
   api-docs:
     enabled: false

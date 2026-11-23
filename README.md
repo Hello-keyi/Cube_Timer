@@ -1,17 +1,40 @@
 # Cube_Timer · 魔方计时器
 
-一个用于记录、管理和统计魔方成绩的个人全栈项目。后端为主线，前端为辅助。
+一个记录、管理与统计魔方成绩的全栈项目。**后端为主线**（Spring Boot 多模块），前端为辅助（Vue 3）。
 
-## 功能
+> 项目目标：通过从零实现一个完整业务系统，系统掌握企业级后端的常见机制
+> （事务 / 鉴权 / AOP / 缓存 / 分页 / 定时任务 / WebSocket / 文件 / 报表 / 多模块）。
 
-- **成绩管理**：新增 / 修改 / 删除 / 分页查询 / 按时间区间筛选
+## 功能特性
+
+### 业务功能
+
+- **成绩管理**：新增 / 修改 / 删除 / 分页查询 / 按耗时区间筛选 / 详情查看
 - **打乱公式**：一条成绩可关联多条打乱公式（1:N），删除成绩时级联删除
-- **数据统计**：总次数、最佳、最差、AVG5、AVG12（WCA 去头尾规则）、今日最佳
-- **统一返回**：全局 `Result{code, msg, data}`，分页封装 `PageResult{total, records}`
-- **全局异常**：业务异常（warn）与系统异常（error）分级处理，错误信息不泄漏内部实现
-- **参数校验**：`@Valid` + JSR-303 注解，Service 层零手写校验
-- **缓存**：统计接口 Redis 缓存（TTL 60s），写操作主动失效
-- **请求日志**：拦截器统一记录请求方法、路径、状态码、耗时
+- **数据统计**：总次数、最佳、最差、AVG5 / AVG12（WCA「去头尾」规则）、今日最佳
+- **每日统计**：定时任务凌晨 2 点把前一天的数据聚合落库（`daily_stat`）
+- **成绩导出**：一键导出 Excel（当前用户的全部成绩）
+- **实时推送**：新增成绩时通过 WebSocket 广播给所有在线客户端
+- **图片上传**：支持上传图片（白名单 + 大小限制 + UUID 重命名）
+
+### 工程能力
+
+| 能力 | 实现 |
+|---|---|
+| 分层架构 | Controller → Service(接口+实现) → Mapper → MySQL |
+| Maven 多模块 | `common`（通用） / `pojo`（数据对象） / `server`（业务服务） |
+| 统一返回 | `Result{code, msg, data}`、`PageResult{total, records}` |
+| 全局异常 | 业务异常（warn）/ 参数校验失败（warn）/ 系统异常（error，不泄漏内部实现） |
+| 参数校验 | `@Valid` + JSR-303，Service 层零手写校验 |
+| 认证鉴权 | BCrypt 密码 + JWT 签发 + 拦截器校验 + ThreadLocal 上下文 |
+| 数据隔离 | 所有业务 SQL 带 `user_id` 过滤，越权访问统一返回「记录不存在」 |
+| 事务 | `@Transactional(rollbackFor = Exception.class)`，多表写入原子性 |
+| AOP | `@AutoFill` 自动填充 `create_time / create_user / update_time / update_user` |
+| 缓存 | 统计接口 Redis 缓存（TTL 60s + 写操作主动失效 + 按用户隔离 key） |
+| 分页 | PageHelper（`reasonable=true`，页码越界自动回到最后一页） |
+| 日志 | 拦截器统一记录请求方法 / 路径 / 状态码 / 耗时 |
+| 接口文档 | springdoc（OpenAPI 3.1），仅 dev 环境开启 |
+| 测试 | JUnit 5（核心统计算法 + 上下文冒烟测试） |
 
 ## 技术栈
 
@@ -24,7 +47,11 @@
 | MyBatis | mybatis-spring-boot-starter 4.0.1 |
 | 数据库 | MySQL 8.0 |
 | 缓存 | Redis 6.0 |
-| 构建 | Maven |
+| 分页 | PageHelper 2.1.0 |
+| JWT | jjwt 0.12.6 |
+| 接口文档 | springdoc-openapi 3.0.0 |
+| Excel | Apache POI 5.2.5 |
+| 构建 | Maven（多模块） |
 
 ### 前端
 
@@ -38,38 +65,52 @@
 
 ```
 Cube_Timer/
-├── backend/                        # 后端（Spring Boot）
-│   ├── src/main/java/com/example/backend/
-│   │   ├── controller/             # 接口层
-│   │   ├── service/                # 业务层（接口 + impl）
-│   │   ├── mapper/                 # MyBatis Mapper 接口
-│   │   ├── entity/                 # 数据库实体
-│   │   ├── dto/                    # 入参对象
-│   │   ├── vo/                     # 出参对象
-│   │   ├── interceptor/            # 拦截器（请求日志）
-│   │   ├── handler/                # 全局异常处理
-│   │   ├── config/                 # 配置（MVC 拦截器注册）
-│   │   ├── common/                 # Result / PageResult
-│   │   ├── exception/              # BusinessException
-│   │   └── util/                   # 工具类（统计算法）
-│   ├── src/main/resources/
-│   │   ├── application.yml         # 通用配置（提交入库）
-│   │   ├── application-dev.yml     # 本地配置（含密码，已被 .gitignore 排除）
-│   │   ├── application-dev.yml.example
-│   │   └── mapper/                 # MyBatis XML
-│   └── src/test/java/              # 单元测试
-├── frontend/                       # 前端（Vue 3 + Vite）
-├── cube_timer.sql                  # 建表脚本
+├── backend/                          # 后端（Maven 多模块）
+│   ├── pom.xml                       # 父 pom（packaging=pom，聚合三模块）
+│   │
+│   ├── common/                       # 通用能力（不依赖 Web）
+│   │   └── com/example/backend/
+│   │       ├── common/               # Result / PageResult
+│   │       ├── exception/            # BusinessException
+│   │       ├── context/              # BaseContext（ThreadLocal 存当前用户）
+│   │       ├── properties/           # JwtProperties（@ConfigurationProperties）
+│   │       ├── util/                 # JwtUtil / StatsUtils
+│   │       ├── annotation/           # @AutoFill
+│   │       └── enums/                # OperationType
+│   │
+│   ├── pojo/                         # 数据对象（不依赖 Spring Web）
+│   │   └── com/example/backend/
+│   │       ├── entity/               # CubeRecord / CubeScramble / User / DailyStat
+│   │       ├── dto/                  # 入参对象
+│   │       └── vo/                   # 出参对象
+│   │
+│   ├── server/                       # 业务服务（Spring Boot 可执行模块）
+│   │   ├── src/main/java/com/example/backend/
+│   │   │   ├── BackendApplication.java
+│   │   │   ├── controller/           # 成绩 / 用户 / 文件
+│   │   │   ├── service/              # 接口 + impl
+│   │   │   ├── mapper/               # MyBatis Mapper 接口
+│   │   │   ├── config/               # MVC / OpenAPI / WebSocket 配置
+│   │   │   ├── interceptor/          # 请求日志 / JWT 校验
+│   │   │   ├── aspect/               # 公共字段自动填充切面
+│   │   │   ├── handler/              # 全局异常处理
+│   │   │   ├── task/                 # 定时任务
+│   │   │   └── websocket/            # WebSocket 服务端
+│   │   ├── src/main/resources/
+│   │   │   ├── application.yml       # 通用配置（提交入库）
+│   │   │   ├── application-dev.yml   # 本地配置（含密码，已被 .gitignore 排除）
+│   │   │   ├── application-dev.yml.example
+│   │   │   ├── mapper/               # MyBatis XML
+│   │   │   └── static/ws-test.html   # WebSocket 测试页
+│   │   └── src/test/java/            # 单元测试
+│   │
+│   └── docs/springboot-learning/     # 开发文档（学习计划 / 进度记录 / 课程卡）
+│
+├── frontend/                         # 前端（Vue 3 + Vite）
+├── scripts/                          # 一键启停脚本（Linux）
+├── cube_timer.sql                    # 建表脚本
 └── README.md
 ```
-
-## 一键启动（Windows 本机 · 推荐）
-
-> 适合日常使用（不需要开终端）。双击项目根目录的 **`一键启动.bat`** 即可：
-> 自动启动 MySQL / Redis / Nginx / 后端 jar，并打开 `http://127.0.0.1/`。
-> 用完双击 **`一键停止.bat`** 关闭全部服务。
->
-> 详细说明见 [`使用说明.md`](./使用说明.md)；底层脚本在 `scripts/start.sh` / `scripts/stop.sh`。
 
 ## 快速开始
 
@@ -90,7 +131,7 @@ mysql -u root -p < cube_timer.sql
 ### 2. 配置数据库连接
 
 ```bash
-cd backend/src/main/resources
+cd backend/server/src/main/resources
 cp application-dev.yml.example application-dev.yml
 ```
 
@@ -110,21 +151,23 @@ sudo service mysql start
 redis-server --daemonize yes
 ```
 
-### 4. 启动后端
+### 4. 构建并运行后端
 
 ```bash
 cd backend
-mvn spring-boot:run
-```
 
-或用打包产物：
+# 方式 A：打包后运行（推荐，最接近生产）
+mvn clean package -DskipTests
+java -jar server/target/server-0.0.1-SNAPSHOT.jar
 
-```bash
-mvn -DskipTests package
-java -jar server/target/server-0.0.1-SNAPSHOT.jar（多模块后产物在 server 模块）
+# 方式 B：直接用 Maven 运行（-am 会连带构建 common/pojo）
+mvn -pl server -am spring-boot:run
 ```
 
 后端地址：http://localhost:8081
+
+> **多模块注意**：单独 `cd server && mvn spring-boot:run` 会失败（common/pojo 未安装）。
+> 要么加 `-am`，要么先 `mvn install`。
 
 ### 5. 启动前端（可选）
 
@@ -134,9 +177,15 @@ npm install
 npm run dev
 ```
 
-## API 文档
+### 6. 接口文档（仅 dev）
 
-所有接口返回统一格式：
+```
+http://localhost:8081/swagger-ui/index.html
+```
+
+## API 概览
+
+所有接口统一返回：
 
 ```json
 { "code": 0, "msg": null, "data": null }
@@ -147,74 +196,108 @@ npm run dev
 | `0` | 成功 |
 | `1` | 业务 / 校验失败，`msg` 为可读提示 |
 
-### 成绩
+### 用户（无需登录）
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/record` | 新增成绩，请求体 `{"timeMs": 1234}` |
-| GET | `/record/list` | 全部成绩 |
-| GET | `/record/page?page=1&size=10` | 分页查询 |
-| GET | `/record/search?minMs=1000&maxMs=5000` | 按时间区间筛选（参数均可选） |
-| GET | `/record/{id}` | 成绩详情（含打乱公式列表） |
-| PUT | `/record/{id}` | 修改成绩，请求体 `{"timeMs": 8888}` |
-| DELETE | `/record/{id}` | 删除成绩（打乱公式级联删除） |
+| POST | `/user/register` | 注册，请求体 `{username, password, nickname?}` |
+| POST | `/user/login` | 登录，返回 `{id, username, nickname, token}` |
 
-### 打乱公式
+### 成绩（**需请求头** `Authorization: Bearer <token>`）
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/record/{id}/scramble` | 为指定成绩新增打乱公式，参数 `scramble` |
+| POST | `/record` | 新增成绩 `{timeMs}` |
+| POST | `/record/full` | 新增成绩 + 多条打乱（**事务**）`{timeMs, scrambles[]}` |
+| GET | `/record/list` | 当前用户全部成绩 |
+| GET | `/record/page` | 分页 + 条件（`page`/`size`/`minMs`/`maxMs`） |
+| GET | `/record/search` | 按耗时区间筛选 |
+| GET | `/record/{id}` | 详情（含打乱列表） |
+| PUT | `/record/{id}` | 修改成绩 `{timeMs}` |
+| DELETE | `/record/{id}` | 删除（打乱级联删除） |
+| POST | `/record/{id}/scramble` | 追加打乱公式 `?scramble=...` |
+| GET | `/record/stats` | 统计（Redis 缓存 60s） |
+| GET | `/record/export` | **导出 Excel**（当前用户全部成绩） |
 
-### 统计
+### 文件（**需登录**）
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/record/stats` | 总次数 / 最佳 / 最差 / AVG5 / AVG12 / 今日最佳（Redis 缓存 60s） |
+| POST | `/file/upload` | 上传图片，返回 `/uploads/xxx.png` |
+| GET | `/uploads/**` | 静态访问已上传图片（无需登录） |
 
-响应示例：
+### 实时推送
 
-```json
-{
-  "total": 22,
-  "bestMs": 592,
-  "bestText": "0.592",
-  "worstMs": 600000,
-  "worstText": "600.000",
-  "avg5Text": "4.115",
-  "avg12Text": "3.269",
-  "todayBestMs": null,
-  "todayBestText": null
-}
+```
+WebSocket: ws://localhost:8081/ws/{任意唯一 sid}
+
+服务端推送消息：
+  {"type":"NEW_RECORD","timeMs":7777}
 ```
 
-## 核心设计说明
+浏览器测试页：`http://localhost:8081/ws-test.html`
 
-### 统一返回与异常分级
+## 核心技术点
 
-- `Result<T>` 统一包装所有响应
-- `BusinessException`：业务失败（如记录不存在），日志 `warn`，返回可读提示
-- 未预期异常：日志 `error`，对外只返回「系统繁忙」，不泄漏类名 / 方法签名
+### 1. 认证与数据隔离
 
-### 参数校验
+```
+登录 → BCrypt 校验 → 签发 JWT（payload 含 userId）
+     → 前端存 token，后续请求带 Authorization: Bearer <token>
+     → 拦截器 parseJWT → BaseContext.setCurrentId(userId)（ThreadLocal）
+     → Service 取当前 userId → Mapper SQL 全部带 where user_id = ?
+     → 请求结束 afterCompletion 清理 ThreadLocal
+```
 
-- 入参对象（DTO）上使用 `@NotNull` / `@Min` / `@Max`
-- Controller 加 `@Valid`，校验在进入 Service 前完成
-- 校验失败由 `MethodArgumentNotValidException` 处理器统一转成可读提示
+- **越权访问统一返回「记录不存在」**（而非「无权限」），避免泄露「这条数据存在」
+- **缓存 key 带用户维度**：`cube:stats:{userId}`，防止 A 用户读到 B 用户的统计
 
-### 统计规则（WCA 去头尾）
+### 2. 事务
 
-AVG5 / AVG12 采用「去头去尾」算法：
+```java
+@Transactional(rollbackFor = Exception.class)
+public void addFull(CubeRecordFullDTO dto) { ... }
+```
 
-1. 取最近 n 次成绩
-2. 去掉一个最好、一个最差
-3. 剩下 n-2 个求平均
+成绩与多条打乱要么全成功、要么全回滚。`rollbackFor` 保证受检异常也回滚。
 
-### 缓存策略
+### 3. AOP 自动填充
 
-- key：`cube:stats`，TTL 60 秒
+```java
+@AutoFill(OperationType.INSERT)
+void insert(CubeRecord record);
+```
+
+切面在 Mapper 方法执行前，用反射填充 `create_time / create_user / update_time / update_user`。
+INSERT 填 4 个，UPDATE 只填 2 个。
+
+### 4. 缓存策略
+
+- key：`cube:stats:{userId}`，TTL 60 秒
 - 读：先查 Redis，命中直接返回
-- 写：增 / 删 / 改成功后立即删除缓存（Cache Invalidation）
-- 缓存访问失败时降级查库，不影响主流程
+- 写：增 / 删 / 改成功后删除缓存（Cache Invalidation）
+- **缓存访问失败时降级查库**，不影响主流程
+
+### 5. 安全细节
+
+| 场景 | 措施 |
+|---|---|
+| 密码存储 | BCrypt（自带盐，故意慢），绝不明文/MD5 |
+| 登录失败提示 | 统一「用户名或密码错误」，防用户名枚举 |
+| 用户名重复 | 应用层先查 + **数据库唯一索引兜底**（并发安全） |
+| 文件上传 | UUID 重命名（防路径穿越）+ 扩展名 & Content-Type 双白名单 + 5MB 限制 |
+| SQL 注入 | MyBatis `#{}` 预编译，不使用 `${}` |
+| 接口文档 | 生产环境 `springdoc.api-docs.enabled=false` |
+
+### 6. 多模块依赖方向
+
+```
+server ──> common
+       └─> pojo
+common ⟷ pojo （互不依赖）
+```
+
+`pojo` 模块里调用 `Service` 会**编译失败** —— 依赖边界由编译器强制。
 
 ## 测试
 
@@ -224,13 +307,38 @@ mvn test
 ```
 
 覆盖：
+- `StatsUtilsTest`：AVG 去头尾算法、边界（数据不足 / 空 / null）、时间格式化
+- `BackendApplicationTests`：Spring 上下文冒烟测试（`RANDOM_PORT`，因为 WebSocket 需要真实容器）
 
-- `StatsUtilsTest`：去头尾平均算法、边界情况（数据不足 / 空列表 / null）、时间格式化
-- `BackendApplicationTests`：Spring 上下文能否正常启动
+## 部署
+
+### Linux 一键启停（需 root）
+
+```bash
+sudo bash scripts/start.sh
+sudo bash scripts/stop.sh
+```
+
+### Windows
+
+```bat
+一键启动.bat
+一键停止.bat
+```
+
+详见 `使用说明.md`。
 
 ## 开发文档
 
-学习与设计过程记录在：
+学习与设计过程记录：
 
-- `backend/docs/springboot-learning/学习计划与进度.md`
-- `frontend/docs/vue-learning/学习计划与进度.md`
+- `backend/docs/springboot-learning/学习计划与进度.md` —— 导航 + 现状 + 契约 + 环境手册
+- `backend/docs/springboot-learning/阶段一-课程卡-已完成.md` —— D1–D15 教案
+- `backend/docs/springboot-learning/阶段一-进度记录.md` —— D1–D15 实测与踩坑
+- `backend/docs/springboot-learning/阶段二-课程卡-对标寒页外卖.md` —— D16–D26 教案
+- `backend/docs/springboot-learning/阶段二-进度记录.md` —— D16–D26 实测与踩坑
+- `frontend/docs/vue-learning/` —— 前端学习记录
+
+## License
+
+个人学习项目，仅用于学习与作品展示。

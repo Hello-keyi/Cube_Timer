@@ -9,9 +9,32 @@ target/
 # ===== IDEA =====
 .idea/
 *.iml
+*.iws
+*.ipr
+# IDEA 数据库连接配置可能含密码
+dbnavigator.xml
+dataSources.xml
+dataSources.local.xml
 
 # ===== 前端 =====
 node_modules/
 dist/
+
+# ===== 用户上传的文件 =====
+uploads/
+
 # ===== 发布包 / 压缩包 =====
 *.zip
+*.tar.gz
+
+# ===== 备份文件（临时改动请用 git 管理）=====
+*.bak
+*.bak.*
+*.orig
+*~
+
+# ===== 系统 / 日志 =====
+.DS_Store
+Thumbs.db
+*.log
+logs/

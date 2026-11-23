@@ -2,6 +2,7 @@ package com.example.backend.handler;
 
 import com.example.backend.common.Result;
 import com.example.backend.exception.BusinessException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 @Slf4j
@@ -47,6 +49,17 @@ public class GlobalExceptionHandler {
         return Result.error("请求体错误");
     }
 
+
+    /**
+     * 访问不存在的路径 —— 返回真实的 404
+     * 注意：如果不单独处理，会被下面的 Exception 兜底接住，变成「HTTP 200 + 系统繁忙 + ERROR 日志」
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<Void> handleNotFound(NoResourceFoundException e, HttpServletResponse response) {
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        log.warn("接口不存在：/{}", e.getResourcePath());
+        return Result.error("接口不存在");
+    }
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e) {
