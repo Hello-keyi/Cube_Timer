@@ -1,6 +1,11 @@
 <script setup>
 import {onBeforeUnmount, ref , onMounted} from 'vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { BarChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 import { fetchStats } from '@/api/records'
 
 const chartRef = ref(null)

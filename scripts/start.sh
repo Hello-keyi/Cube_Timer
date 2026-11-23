@@ -34,7 +34,8 @@ echo
 echo "等待后端就绪 ..."
 READY=0
 for i in $(seq 1 60); do
-  if curl -s --max-time 1 http://127.0.0.1:8081/hello >/dev/null 2>&1; then READY=1; break; fi
+  # /record/list 未带 token 返回 401 也说明服务已起来
+  if curl -s -o /dev/null -w "%{http_code}" --max-time 1 http://127.0.0.1:8081/record/list 2>/dev/null | grep -qE "^(200|401)$"; then READY=1; break; fi
   sleep 1
 done
 [ "$READY" = "1" ] && echo "✅ 后端就绪（8081）" || echo "⚠️ 后端 60 秒内未就绪，日志：tail -50 /tmp/cube-timer-backend.log"

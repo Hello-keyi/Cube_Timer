@@ -19,15 +19,6 @@ export function fetchRecordsPage(page = 1, size = 10, filters = {}) {
   return request('/record/page?' + params.toString())
 }
 
-/** 按时间区间筛选（可选参数不传） */
-export function searchRecords(minMs, maxMs) {
-  const params = new URLSearchParams()
-  if (minMs !== '' && minMs !== null && minMs !== undefined) params.append('minMs', minMs)
-  if (maxMs !== '' && maxMs !== null && maxMs !== undefined) params.append('maxMs', maxMs)
-  const query = params.toString()
-  return request('/record/search' + (query ? '?' + query : ''))
-}
-
 /** 删除一条成绩 */
 export function deleteRecord(id) {
   return request('/record/' + id, { method: 'DELETE' })
