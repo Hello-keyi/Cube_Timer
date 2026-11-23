@@ -1,13 +1,19 @@
 <script setup>
 // F9 登录页（骨架 —— 你来实现 TODO）
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { login } from '@/api/user'
+import { getToken } from '@/api/request'
 import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 const route = useRoute()
 const { saveLogin } = useAuth()
+
+onMounted(() => {
+  // 已经登录的用户没必要再看登录页
+  if (getToken()) router.replace('/')
+})
 
 const username = ref('')
 const password = ref('')

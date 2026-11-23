@@ -23,6 +23,7 @@ function handleLogout() {
     <template v-if="isLoggedIn">
       <RouterLink class="tab" to="/record/new">录入</RouterLink>
       <RouterLink class="tab" to="/stats">统计</RouterLink>
+      <RouterLink class="tab" to="/upload">上传</RouterLink>
       <span class="tab tab-user">{{ user?.nickname || user?.username }}</span>
       <button class="tab tab-logout" @click="handleLogout">退出登录</button>
     </template>

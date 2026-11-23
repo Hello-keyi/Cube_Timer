@@ -32,8 +32,12 @@ export async function request(url, options = {}) {
 
   if (res.status === 401) {
     clearToken()
-    window.location.href = '/login'
-    throw new Error('Unauthorized: Token expired or invalid')
+    // 带上当前路径，登录后能跳回来；已经在登录页就不再重复跳转（避免死循环）
+    if (window.location.pathname !== '/login') {
+      const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+      window.location.href = '/login?redirect=' + redirect
+    }
+    throw new Error('登录已过期，请重新登录')
   }
 
   const json = await res.json()

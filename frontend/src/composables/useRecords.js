@@ -36,5 +36,13 @@ export function useRecords() {
     }
   }
 
-  return { records, loading, error, load, add }
+  // 退出登录时调用：清空数据，避免下一个账号看到上一个账号的缓存
+  function reset() {
+    records.value = []
+    loading.value = false
+    error.value = ''
+    loaded = false
+  }
+
+  return { records, loading, error, load, add, reset }
 }

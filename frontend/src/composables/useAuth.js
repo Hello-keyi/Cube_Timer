@@ -1,6 +1,7 @@
 // 全局登录态：模块级 ref，所有组件共享同一份（类似 useRecords 的写法）
 import { computed, ref } from 'vue'
 import { clearToken, getToken, setToken } from '@/api/request'
+import { useRecords } from '@/composables/useRecords'
 
 const USER_KEY = 'cube_timer_user'
 
@@ -37,6 +38,7 @@ export function useAuth() {
     token.value = ''
     user.value = null
     localStorage.removeItem(USER_KEY)
+    useRecords().reset()   // 清掉成绩缓存，避免串号
   }
 
   return { token, user, isLoggedIn, saveLogin, logout }
