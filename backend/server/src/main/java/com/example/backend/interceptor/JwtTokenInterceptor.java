@@ -39,7 +39,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
              }
              BaseContext.setContextId(userId);
             log.debug("token 校验通过 userId={}", userId);
-             return true;
+            return true;
         } catch (Exception e){
             log.warn("token 校验失败：{}", e.getMessage());
             reject(response,"登录已过期，请重新登录");
