@@ -2,6 +2,12 @@
 
 一个记录、管理与统计魔方成绩的全栈项目。**后端为主线**（Spring Boot 多模块），前端为辅助（Vue 3）。
 
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.8-brightgreen?logo=springboot)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?logo=mysql)
+![Redis](https://img.shields.io/badge/Redis-6.0-red?logo=redis)
+![Vue](https://img.shields.io/badge/Vue-3.5-42b883?logo=vuedotjs)
+
 > 项目目标：通过从零实现一个完整业务系统，系统掌握企业级后端的常见机制
 > （事务 / 鉴权 / AOP / 缓存 / 分页 / 定时任务 / WebSocket / 文件 / 报表 / 多模块）。
 
@@ -107,6 +113,8 @@ Cube_Timer/
 │   └── docs/springboot-learning/     # 开发文档（学习计划 / 进度记录 / 课程卡）
 │
 ├── frontend/                         # 前端（Vue 3 + Vite）
+├── docs/                             # 项目文档
+│   └── 面试话术-项目讲解.md          # 面试讲解准备（30 秒 / 2 分钟 / 深挖）
 ├── scripts/                          # 一键启停脚本（Linux）
 ├── cube_timer.sql                    # 建表脚本
 └── README.md
@@ -338,7 +346,10 @@ sudo bash scripts/stop.sh
 - `backend/docs/springboot-learning/阶段二-课程卡-对标寒页外卖.md` —— D16–D26 教案
 - `backend/docs/springboot-learning/阶段二-进度记录.md` —— D16–D26 实测与踩坑
 - `frontend/docs/vue-learning/` —— 前端学习记录
+- `docs/面试话术-项目讲解.md` —— **面试怎么讲这个项目**（亮点 / 追问 / 简历写法）
 
 ## License
 
-个人学习项目，仅用于学习与作品展示。
+[MIT](LICENSE) —— 可自由使用、修改、分发。
+
+> 个人学习项目，用于学习与作品展示。
