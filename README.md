@@ -340,6 +340,7 @@ sudo bash scripts/stop.sh
 
 学习与设计过程记录：
 
+- **`docs/项目导读.md` —— 读代码专用：模块地图 / 调用链 / 机制索引 / 自测清单**
 - `backend/docs/springboot-learning/学习计划与进度.md` —— 导航 + 现状 + 契约 + 环境手册
 - `backend/docs/springboot-learning/阶段一-课程卡-已完成.md` —— D1–D15 教案
 - `backend/docs/springboot-learning/阶段一-进度记录.md` —— D1–D15 实测与踩坑
